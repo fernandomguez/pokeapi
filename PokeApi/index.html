@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador Pokémon</title>
+    <style>
+        :root {
+            --primary-color: #ef5350;
+            --background-color: #f4f6f9;
+            --card-background: #ffffff;
+            --text-color: #333333;
+            --border-color: #ddd;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: var(--card-background);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            font-size: 1.8rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #d32f2f;
+        }
+
+        #resultado {
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+
+        /* Estilos para la tarjeta del Pokémon cuando aparece */
+        .pokemon-card {
+            background: #fafafa;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .pokemon-card img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+        }
+
+        .pokemon-card h2 {
+            margin: 0 0 0.5rem 0;
+            color: #222;
+        }
+
+        .pokemon-info {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Pokédex</h1>
+        <div class="search-box">
+            <input type="text" id="pokemonInput" placeholder="Ej: Pikachu, Ditto...">
+            <button id="buscarBtn">Buscar</button>
+        </div>
+
+        <div id="resultado"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
