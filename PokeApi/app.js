@@ -2,7 +2,6 @@ const input = document.getElementById('pokemonInput');
 const boton = document.getElementById('buscarBtn');
 const resultadoDiv = document.getElementById('resultado');
 
-// Función principal que ejecuta la búsqueda
 function ejecutarBusqueda() {
     const nombrePokemon = input.value.trim().toLowerCase();
     
