@@ -30,17 +30,125 @@
             padding: 2.5rem 1rem;
         }
 
-        h1 {
-            margin: 0 0 1.5rem;
-            color: var(--primary-color);
+        /* ---- Cabecera ---- */
+
+        .cabecera {
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.18), transparent 45%),
+                linear-gradient(135deg, #d32f2f 0%, #c62828 50%, #a31515 100%);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(198, 40, 40, 0.35);
+        }
+
+        /* Pokéball gigante y semitransparente de adorno */
+        .cabecera::before {
+            content: "";
+            position: absolute;
+            right: -70px;
+            top: 50%;
+            width: 280px;
+            height: 280px;
+            transform: translateY(-50%);
+            border-radius: 50%;
+            background:
+                radial-gradient(circle, #fff 0 14%, rgba(255, 255, 255, 0.0) 15% 20%, transparent 21%),
+                linear-gradient(transparent 46%, rgba(255, 255, 255, 0.35) 46% 54%, transparent 54%);
+            border: 10px solid rgba(255, 255, 255, 0.25);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .cabecera__interior {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem 1.75rem;
             text-align: center;
-            font-size: 1.8rem;
+        }
+
+        .marca {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .pokeball {
+            flex: none;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 3px solid #222;
+            background: linear-gradient(#ef5350 0 46%, #222 46% 54%, #fff 54%);
+            position: relative;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            animation: balanceo 4s ease-in-out infinite;
+        }
+
+        .pokeball::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 14px;
+            height: 14px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #222;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+        }
+
+        .cabecera__lema {
+            margin: 0.35rem 0 1.4rem;
+            font-size: 0.95rem;
         }
 
         .search-box {
             display: flex;
             gap: 0.5rem;
-            margin-bottom: 1.25rem;
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 0.4rem;
+            background: #fff;
+            border-radius: 999px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+        }
+
+        .search-box input[type="text"] {
+            border: none;
+            background: transparent;
+            padding: 0.6rem 1rem;
+        }
+
+        .search-box button {
+            border-radius: 999px;
+            padding: 0.6rem 1.5rem;
+            background-color: #b71c1c;
+        }
+
+        @keyframes balanceo {
+            0%, 100% { transform: rotate(-12deg); }
+            50% { transform: rotate(12deg); }
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.9rem; }
+            .pokeball { width: 38px; height: 38px; }
+            .cabecera::before { width: 200px; height: 200px; right: -80px; }
+        }
+
+        .contenido-principal {
+            margin-top: 1.5rem;
         }
 
         input[type="text"] {
@@ -116,7 +224,7 @@
         .chip--facet[aria-expanded="true"],
         .chip--facet.chip--on {
             border-color: var(--primary-color);
-            color: var(--primary-color);
+            color: #c62828;
         }
 
         .chip--faceta-favoritos[aria-pressed="true"] {
@@ -127,7 +235,7 @@
 
         .chip:hover:not([aria-pressed="true"]) {
             border-color: var(--primary-color);
-            color: var(--primary-color);
+            color: #c62828;
         }
 
         .chip--quitar {
@@ -411,13 +519,21 @@
 </head>
 <body>
 
-    <div class="container">
-        <h1>Pokédex</h1>
-        <div class="search-box">
-            <input type="text" id="pokemonInput" placeholder="Buscar por nombre o número: Pikachu, 25..." autocomplete="off">
-            <button id="buscarBtn">Buscar</button>
+    <header class="cabecera">
+        <div class="cabecera__interior">
+            <div class="marca">
+                <span class="pokeball" aria-hidden="true"></span>
+                <h1>Pokédex</h1>
+            </div>
+            <p class="cabecera__lema">Busca, filtra y guarda tus Pokémon favoritos</p>
+            <div class="search-box">
+                <input type="text" id="pokemonInput" placeholder="Buscar por nombre o número: Pikachu, 25..." autocomplete="off">
+                <button id="buscarBtn">Buscar</button>
+            </div>
         </div>
+    </header>
 
+    <div class="container contenido-principal">
         <div class="filtros" role="group" aria-label="Filtros y orden">
             <span class="filtros__titulo">Filtrar por:</span>
             <div class="filtros__botones">
