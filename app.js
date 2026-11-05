@@ -9,7 +9,7 @@
 // El estado (búsqueda, página, tipos, favoritos, incluir formas) vive en el hash de la URL,
 // así que una búsqueda resultada se puede compartir y atrás/adelante del navegador funcionan.
 
-const APP_VERSION = '6 · reintento de carga y versión visible (2026-11-05)';
+const APP_VERSION = '7 · reintentos automáticos y aviso QUIC (2026-11-05)';
 console.info(`Pokédex · app.js con commit actual · ${APP_VERSION}`);
 
 const API_URL = 'https://pokeapi.co/api/v2/pokemon';
@@ -191,6 +191,8 @@ function pantalla(texto, conReintentar) {
     resultadoDiv.querySelector('#btnReintentar')?.addEventListener('click', () => cargarLista(true));
 }
 
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+
 async function cargarLista(forzar = false) {
     if (estado.cargado && !forzar) {
         return;
@@ -199,26 +201,39 @@ async function cargarLista(forzar = false) {
 
     Object.assign(estado.filtros, estadoDesdeHash());
     reflejarControles();
-    pantalla('Cargando la lista de Pokémon…');
 
-    try {
-        // La PokéAPI tiene ~1302 Pokémon (los 1025 oficiales + formas);
-        // con limit alto basta una única petición para todo.
-        const response = await fetch(`${API_URL}?limit=2000`);
-        if (!response.ok) {
-            throw new Error('La API no responde');
+    // Reintenta solo: cortes momentos de red (o QUIC bloqueado que entra y sale) se recuperan sin recargar.
+    const INTENTOS = 3;
+    for (let intento = 1; intento <= INTENTOS; intento++) {
+        pantalla(intento === 1
+            ? 'Cargando la lista de Pokémon…'
+            : `Sin respuesta de la API · reintentando automáticamente (${intento - 1} de ${INTENTOS - 1})…`);
+        try {
+            // La PokéAPI tiene ~1302 Pokémon (los 1025 oficiales + formas);
+            // con limit alto basta una única petición para todo.
+            const response = await fetch(`${API_URL}?limit=2000`);
+            if (!response.ok) {
+                throw new Error('La API no responde');
+            }
+
+            const datos = await response.json();
+            estado.lista = datos.results.map((r) => {
+                const id = Number(r.url.split('/').filter(Boolean).pop());
+                return { id, name: r.name };
+            }).sort((a, b) => a.id - b.id);
+            estado.cargado = true;
+            renderRejilla();
+            return;
+        } catch (error) {
+            if (intento < INTENTOS) {
+                await esperar(1500 * intento);
+            }
         }
-
-        const datos = await response.json();
-        estado.lista = datos.results.map((r) => {
-            const id = Number(r.url.split('/').filter(Boolean).pop());
-            return { id, name: r.name };
-        }).sort((a, b) => a.id - b.id);
-        estado.cargado = true;
-        renderRejilla();
-    } catch (error) {
-        pantalla('No se ha podido cargar la lista de Pokémon. Comprueba tu conexión y vuelve a intentarlo.', true);
     }
+
+    pantalla('No se ha podido cargar la lista de Pokémon tras reintentar. '
+        + 'Tu red puede estar bloqueando la conexión a la API (QUIC): prueba en otro navegador '
+        + 'o desactiva QUIC en chrome://flags.', true);
 }
 
 function mostrarMensaje(texto) {
@@ -495,6 +510,19 @@ function renderRejilla() {
     // Al tratar los chips de tipo se piden sus listas; hasta que estén, no se filtra a medias.
     estado.filtros.tipos.forEach(precargarTipo);
     if (estado.filtros.tipos.length && !tiposCargados()) {
+        const fallidos = estado.filtros.tipos.filter((t) => estado.tipoListas[t] === 'error');
+        if (fallidos.length) {
+            paginacionDiv.innerHTML = '';
+            resultadoDiv.innerHTML = `
+                <p class="empty-message">No se ha podido cargar el filtro de tipos.</p>
+                <button type="button" id="btnReintentarTipos">↺ Reintentar</button>
+            `;
+            resultadoDiv.querySelector('#btnReintentarTipos')?.addEventListener('click', () => {
+                fallidos.forEach((t) => { delete estado.tipoListas[t]; });
+                estado.filtros.tipos.forEach(precargarTipo);
+            });
+            return;
+        }
         mostrarMensaje('Cargando el filtro de tipos…');
         return;
     }
