@@ -32,5 +32,5 @@ if __name__ == "__main__":
         imagen_url = datos['sprites']['other']['official-artwork']['front_default']
         print(f"Imagen oficial: {imagen_url}")
         
-else:
-    print("¿Estás seguro de que este Pokémon existe?")
+    else:
+        print("¿Estás seguro de que este Pokémon existe?")
