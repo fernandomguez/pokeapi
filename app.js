@@ -13,6 +13,7 @@ const APP_VERSION = '5 · barra de facetas + quitar filtros (2026-11-05)';
 console.info(`Pokédex · app.js v${APP_VERSION} · commit 0f38589`);
 
 const API_URL = 'https://pokeapi.co/api/v2/pokemon';
+const TIPOS_URL = 'https://pokeapi.co/api/v2/type'; // ¡endpoint aparte! /pokemon/{tipo} da 404
 const SPRITES_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
 const POR_PAGINA = 24;
 const ID_ULTIMO_OFICIAL = 1025; // Los IDs mayores son formas alternativas, regionales, etc.
@@ -305,7 +306,7 @@ async function precargarTipo(tipo) {
     }
     estado.tipoListas[tipo] = 'cargando';
     try {
-        const response = await fetch(`${API_URL}/${tipo}`);
+        const response = await fetch(`${TIPOS_URL}/${tipo}`);
         if (!response.ok) {
             throw new Error('error');
         }
