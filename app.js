@@ -61,6 +61,7 @@ const facetaTipo = document.getElementById('facetaTipo');
 const facetaGen = document.getElementById('facetaGen');
 const facetaOrden = document.getElementById('facetaOrden');
 const facetaFav = document.getElementById('facetaFav');
+const btnQuitarFiltros = document.getElementById('quitarFiltros');
 
 const estado = {
     cargado: false,
@@ -105,7 +106,7 @@ function alternarFavorito(id) {
 
 // ---------- Estado <-> hash de la URL ----------
 
-function sincronizarHash() {
+function hashDesdeEstado() {
     const params = new URLSearchParams();
     if (estado.filtros.q) params.set('q', estado.filtros.q);
     if (estado.filtros.pagina > 0) params.set('pagina', estado.filtros.pagina + 1);
@@ -114,13 +115,33 @@ function sincronizarHash() {
     if (estado.filtros.orden !== 'num') params.set('orden', estado.filtros.orden);
     if (estado.filtros.soloFavoritos) params.set('fav', '1');
     if (estado.filtros.incluirFormas) params.set('formas', '1');
+    return params.toString();
+}
 
-    estado.hashActual = `#${params.toString()}`;
-    try {
-        history.replaceState(null, '', estado.hashActual || location.pathname);
-    } catch (error) {
-        // Útil solo en http/https: en file:// algunos navegadores lo bloquean, y no es crítico.
-        location.hash = estado.hashActual;
+let ultimoHashHistorial = location?.hash || ''; // último hash con entrada propia en el historial
+
+function sincronizarHistorial(alHistorial) {
+    const hash = `#${hashDesdeEstado()}`;
+    estado.hashActual = hash;
+
+    if (alHistorial) {
+        // Acción del usuario (aplicar o quitar un filtro, buscar, paginar): entrada nueva.
+        // Sin replace previo: el replace machacaría la entrada "anterior" y el botón Atrás no desharía nada.
+        if (hash !== ultimoHashHistorial) {
+            try {
+                history.pushState(null, '', hash === '#' ? location.pathname : hash);
+                ultimoHashHistorial = hash;
+            } catch (error) {
+                /* en file:// algunos navegadores lo bloquean, no es crítico */
+            }
+        }
+    } else {
+        // Cambios menores: se reemplaza la entrada actual (no queda rastro en el historial).
+        try {
+            history.replaceState(null, '', hash === '#' ? location.pathname : hash);
+        } catch (error) {
+            location.hash = hash; // en file://
+        }
     }
 }
 
@@ -149,6 +170,7 @@ window.addEventListener('hashchange', () => {
     }
     Object.assign(estado.filtros, estadoDesdeHash());
     estado.hashActual = location.hash;
+    ultimoHashHistorial = location.hash;
     reflejarControles();
     renderRejilla();
 });
@@ -202,7 +224,7 @@ function buscarAhora() {
     clearTimeout(temporizadorBusqueda);
     estado.filtros.q = input.value;
     estado.filtros.pagina = 0;
-    actualizar();
+    actualizar(true);
 }
 
 input.addEventListener('input', () => {
@@ -224,7 +246,7 @@ buscarBtn.addEventListener('click', buscarAhora);
 soloOficialesInput.addEventListener('change', () => {
     estado.filtros.incluirFormas = !soloOficialesInput.checked;
     estado.filtros.pagina = 0;
-    actualizar();
+    actualizar(true);
 });
 
 function alternarTipo(tipo) {
@@ -236,13 +258,13 @@ function alternarTipo(tipo) {
         precargarTipo(tipo);
     }
     estado.filtros.pagina = 0;
-    actualizar();
+    actualizar(true);
 }
 
 function alternarFavoritos() {
     estado.filtros.soloFavoritos = !estado.filtros.soloFavoritos;
     estado.filtros.pagina = 0;
-    actualizar();
+    actualizar(true);
 }
 
 function alternarGeneracion(n) {
@@ -251,13 +273,13 @@ function alternarGeneracion(n) {
         ? activas.splice(activas.indexOf(n), 1)
         : activas.push(n);
     estado.filtros.pagina = 0;
-    actualizar();
+    actualizar(true);
 }
 
 function alternarOrden(clave) {
     estado.filtros.orden = clave;
     estado.filtros.pagina = 0;
-    actualizar();
+    actualizar(true);
 }
 
 // Ordena copia para no reordenar la lista maestra.
@@ -360,6 +382,19 @@ facetaTipo.addEventListener('click', () => alternarPanel('panelTipo'));
 facetaGen.addEventListener('click', () => alternarPanel('panelGen'));
 facetaOrden.addEventListener('click', () => alternarPanel('panelOrden'));
 facetaFav.addEventListener('click', alternarFavoritos);
+btnQuitarFiltros.addEventListener('click', quitarFiltros);
+
+// Resetea por completo la barra: tipos, generación, orden, favoritos, formas y búsqueda.
+function quitarFiltros() {
+    estado.filtros.tipos = [];
+    estado.filtros.generaciones = [];
+    estado.filtros.orden = 'num';
+    estado.filtros.soloFavoritos = false;
+    estado.filtros.incluirFormas = false;
+    estado.filtros.q = '';
+    estado.filtros.pagina = 0;
+    actualizar(true);
+}
 
 // Etiquetas y resaltados de la barra: cuenta activos en cada faceta.
 function actualizarBarra() {
@@ -371,6 +406,11 @@ function actualizarBarra() {
     facetaFav.setAttribute('aria-pressed', String(estado.filtros.soloFavoritos));
     facetaTipo.classList.toggle('chip--on', nTipos > 0);
     facetaGen.classList.toggle('chip--on', nGens > 0);
+
+    // El botón de quitar filtros solo aparece cuando hay algo que quitar.
+    const algoActivo = Boolean(nTipos || nGens || estado.filtros.soloFavoritos
+        || estado.filtros.incluirFormas || estado.filtros.orden !== 'num' || estado.filtros.q.trim());
+    btnQuitarFiltros.classList.toggle('oculto', !algoActivo);
 }
 
 function renderChipsTipos() {
@@ -417,8 +457,8 @@ function renderOrdenes() {
     });
 }
 
-function actualizar() {
-    sincronizarHash();
+function actualizar(alHistorial = false) {
+    sincronizarHistorial(alHistorial);
     renderRejilla();
 }
 
@@ -579,7 +619,7 @@ function renderPaginacion(total, totalPaginas) {
 
 function cambiarPagina(numero) {
     estado.filtros.pagina = numero;
-    actualizar();
+    actualizar(true);
     // Scroll suave al principio de la rejilla para no perderse entre páginas.
     resultadoDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }

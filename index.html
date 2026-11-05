@@ -67,13 +67,16 @@
             transition: background-color 0.2s;
         }
 
-        button:hover:not(:disabled) {
-            background-color: #d32f2f;
-        }
-
         button:disabled {
             opacity: 0.4;
             cursor: not-allowed;
+        }
+
+        /* El hover rojo solo para los botones de acción; los chips y las tarjetas van las suyas. */
+        .search-box button:hover:not(:disabled),
+        .pagination button:hover:not(:disabled),
+        .modal__cerrar:hover:not(:disabled) {
+            background-color: #d32f2f;
         }
 
         /* ---- Barra de filtros ---- */
@@ -118,6 +121,21 @@
             background: #e91e63;
             border-color: transparent;
             color: #fff;
+        }
+
+        .chip:hover:not([aria-pressed="true"]) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .chip--quitar {
+            border-style: dashed;
+            color: var(--text-soft);
+        }
+
+        .chip--quitar:hover:not([aria-pressed="true"]) {
+            border-color: #d32f2f;
+            color: #d32f2f;
         }
 
         .panel {
@@ -188,7 +206,6 @@
 
         .p-card:hover:not(:disabled) {
             border-color: var(--primary-color);
-            transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
         }
 
@@ -250,6 +267,10 @@
         }
 
         .corazon--activo {
+            color: #e91e63;
+        }
+
+        .corazon:hover:not([aria-pressed="true"]) {
             color: #e91e63;
         }
 
@@ -406,6 +427,8 @@
                         aria-expanded="false" aria-controls="panelOrden">Ordenar</button>
                 <button type="button" id="facetaFav" class="chip chip--facet chip--faceta-favoritos"
                         aria-pressed="false">★ Favoritos</button>
+                <button type="button" id="quitarFiltros" class="chip chip--quitar oculto"
+                        title="Quita todos los filtros, el orden y la búsqueda">✕ Quitar filtros</button>
             </div>
             <div id="panelTipo" class="panel oculto">
                 <nav class="chips" id="chipsTipos" aria-label="Filtrar por tipo"></nav>
