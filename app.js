@@ -9,8 +9,8 @@
 // El estado (búsqueda, página, tipos, favoritos, incluir formas) vive en el hash de la URL,
 // así que una búsqueda resultada se puede compartir y atrás/adelante del navegador funcionan.
 
-const APP_VERSION = '7 · reintentos automáticos y aviso QUIC (2026-11-05)';
-console.info(`Pokédex · app.js con commit actual · ${APP_VERSION}`);
+const APP_VERSION = '7: reintentos automáticos y aviso QUIC (2026-11-05)';
+console.info(`Pokédex, app.js con commit actual, ${APP_VERSION}`);
 
 const API_URL = 'https://pokeapi.co/api/v2/pokemon';
 const TIPOS_URL = 'https://pokeapi.co/api/v2/type'; // ¡endpoint aparte! /pokemon/{tipo} da 404
@@ -36,15 +36,15 @@ const NOMBRES_TIPO = {
 
 // Rangos de IDs oficiales por generación (solo válido para IDs 1–1025).
 const GENERACIONES = [
-    { n: 1, nombre: '1 · Kanto',   rango: [1, 151] },
-    { n: 2, nombre: '2 · Johto',   rango: [152, 251] },
-    { n: 3, nombre: '3 · Hoenn',   rango: [252, 386] },
-    { n: 4, nombre: '4 · Sinnoh',  rango: [387, 493] },
-    { n: 5, nombre: '5 · Unova',   rango: [494, 649] },
-    { n: 6, nombre: '6 · Kalos',   rango: [650, 721] },
-    { n: 7, nombre: '7 · Alola',   rango: [722, 809] },
-    { n: 8, nombre: '8 · Galar',   rango: [810, 905] },
-    { n: 9, nombre: '9 · Paldea',  rango: [906, 1025] },
+    { n: 1, nombre: '1. Kanto',   rango: [1, 151] },
+    { n: 2, nombre: '2. Johto',   rango: [152, 251] },
+    { n: 3, nombre: '3. Hoenn',   rango: [252, 386] },
+    { n: 4, nombre: '4. Sinnoh',  rango: [387, 493] },
+    { n: 5, nombre: '5. Unova',   rango: [494, 649] },
+    { n: 6, nombre: '6. Kalos',   rango: [650, 721] },
+    { n: 7, nombre: '7. Alola',   rango: [722, 809] },
+    { n: 8, nombre: '8. Galar',   rango: [810, 905] },
+    { n: 9, nombre: '9. Paldea',  rango: [906, 1025] },
 ];
 
 const ORDENES = {
@@ -60,7 +60,6 @@ const paginacionDiv = document.getElementById('paginacion');
 const chipsTiposDiv = document.getElementById('chipsTipos');
 const chipsGenDiv = document.getElementById('chipsGen');
 const chipsOrdenDiv = document.getElementById('chipsOrden');
-const soloOficialesInput = document.getElementById('soloOficiales');
 const facetaTipo = document.getElementById('facetaTipo');
 const facetaGen = document.getElementById('facetaGen');
 const facetaOrden = document.getElementById('facetaOrden');
@@ -164,7 +163,7 @@ function estadoDesdeHash() {
         generaciones,
         orden: orden in ORDENES ? orden : 'num',
         soloFavoritos: params.get('fav') === '1',
-        incluirFormas: params.get('formas') === '1',
+        incluirFormas: false,
     };
 }
 
@@ -207,7 +206,7 @@ async function cargarLista(forzar = false) {
     for (let intento = 1; intento <= INTENTOS; intento++) {
         pantalla(intento === 1
             ? 'Cargando la lista de Pokémon…'
-            : `Sin respuesta de la API · reintentando automáticamente (${intento - 1} de ${INTENTOS - 1})…`);
+            : `Sin respuesta de la API, reintentando automáticamente (${intento - 1} de ${INTENTOS - 1})…`);
         try {
             // La PokéAPI tiene ~1302 Pokémon (los 1025 oficiales + formas);
             // con limit alto basta una única petición para todo.
@@ -272,12 +271,6 @@ input.addEventListener('keydown', (event) => {
 buscarBtn.addEventListener('click', buscarAhora);
 
 // ---------- Conmutadores ----------
-
-soloOficialesInput.addEventListener('change', () => {
-    estado.filtros.incluirFormas = !soloOficialesInput.checked;
-    estado.filtros.pagina = 0;
-    actualizar(true);
-});
 
 function alternarTipo(tipo) {
     const activos = estado.filtros.tipos;
@@ -494,7 +487,6 @@ function actualizar(alHistorial = false) {
 
 function reflejarControles() {
     input.value = estado.filtros.q;
-    soloOficialesInput.checked = !estado.filtros.incluirFormas;
     renderChipsTipos();
     renderGeneraciones();
     renderOrdenes();
@@ -649,7 +641,7 @@ function renderPaginacion(total, totalPaginas) {
     paginacionDiv.innerHTML = `
         <button type="button" id="pagInicio" aria-label="Primera página" ${pag === 0 ? 'disabled' : ''}>&laquo;</button>
         <button type="button" id="pagPrev" aria-label="Página anterior" ${pag === 0 ? 'disabled' : ''}>&lsaquo;</button>
-        <span class="info">${total} Pokémon · Página ${pag + 1} de ${totalPaginas}</span>
+        <span class="info">${total} Pokémon, página ${pag + 1} de ${totalPaginas}</span>
         <button type="button" id="pagNext" aria-label="Página siguiente" ${pag >= totalPaginas - 1 ? 'disabled' : ''}>&rsaquo;</button>
         <button type="button" id="pagFin" aria-label="Última página" ${pag >= totalPaginas - 1 ? 'disabled' : ''}>&raquo;</button>
     `;
