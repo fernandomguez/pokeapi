@@ -76,39 +76,56 @@
             cursor: not-allowed;
         }
 
-        /* ---- Chips de filtro (tipos y favoritos) ---- */
+        /* ---- Barra de filtros ---- */
 
         .filtros {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 0.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.75rem;
         }
 
-        .chip--toggle {
-            display: inline-flex;
-            align-items: center;
+        .filtros__titulo {
+            font-size: 0.9rem;
+            color: var(--text-soft);
+        }
+
+        .filtros__botones {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 0.4rem;
         }
 
-        .chip--toggle .flecha {
+        .chip .flecha {
+            display: inline-block;
             font-size: 0.65rem;
             transition: transform 0.2s;
         }
 
-        #btnFiltros[aria-expanded="true"] .flecha {
+        .chip--facet[aria-expanded="true"] .flecha {
             transform: rotate(180deg);
         }
 
-        #btnFiltros[aria-expanded="true"],
-        #btnFiltros.chip--on {
+        .chip--facet[aria-expanded="true"],
+        .chip--facet.chip--on {
             border-color: var(--primary-color);
             color: var(--primary-color);
         }
 
+        .chip--faceta-favoritos[aria-pressed="true"] {
+            background: #e91e63;
+            border-color: transparent;
+            color: #fff;
+        }
+
         .panel {
-            text-align: center;
+            max-width: 100%;
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.75rem;
         }
 
         .oculto {
@@ -120,7 +137,6 @@
             flex-wrap: wrap;
             justify-content: center;
             gap: 0.4rem;
-            margin-bottom: 0.75rem;
         }
 
         .chip {
@@ -138,10 +154,6 @@
             background: var(--tipo, var(--primary-color));
             border-color: transparent;
             color: #fff;
-        }
-
-        .chip--favoritos[aria-pressed="true"] {
-            background: #e91e63;
         }
 
         .formas {
@@ -383,19 +395,32 @@
             <button id="buscarBtn">Buscar</button>
         </div>
 
-        <div class="filtros">
-            <button type="button" id="btnFiltros" class="chip chip--toggle"
-                    aria-expanded="false" aria-controls="panelFiltros">
-                Filtros <span id="filtrosResumen"></span><span class="flecha" aria-hidden="true">▾</span>
-            </button>
-            <div id="panelFiltros" class="panel oculto">
-                <nav id="chipsTipos" class="chips" aria-label="Filtrar por tipo o favoritos"></nav>
-                <label class="formas">
-                    <input type="checkbox" id="soloOficiales" checked>
-                    Solo la Pokédex oficial (1–1025)
-                </label>
+        <div class="filtros" role="group" aria-label="Filtros y orden">
+            <span class="filtros__titulo">Filtrar por:</span>
+            <div class="filtros__botones">
+                <button type="button" id="facetaTipo" class="chip chip--facet"
+                        aria-expanded="false" aria-controls="panelTipo">Tipo</button>
+                <button type="button" id="facetaGen" class="chip chip--facet"
+                        aria-expanded="false" aria-controls="panelGen">Generación</button>
+                <button type="button" id="facetaOrden" class="chip chip--facet"
+                        aria-expanded="false" aria-controls="panelOrden">Ordenar</button>
+                <button type="button" id="facetaFav" class="chip chip--facet chip--faceta-favoritos"
+                        aria-pressed="false">★ Favoritos</button>
+            </div>
+            <div id="panelTipo" class="panel oculto">
+                <nav class="chips" id="chipsTipos" aria-label="Filtrar por tipo"></nav>
+            </div>
+            <div id="panelGen" class="panel oculto">
+                <nav class="chips" id="chipsGen" aria-label="Filtrar por generación"></nav>
+            </div>
+            <div id="panelOrden" class="panel oculto">
+                <nav class="chips" id="chipsOrden" aria-label="Ordenar la lista"></nav>
             </div>
         </div>
+        <label class="formas">
+            <input type="checkbox" id="soloOficiales" checked>
+            Solo la Pokédex oficial (1–1025)
+        </label>
 
         <div id="resultado"></div>
         <nav id="paginacion" class="pagination" aria-label="Páginas de Pokémon"></nav>

@@ -30,15 +30,37 @@ const NOMBRES_TIPO = {
     steel: 'Acero', fairy: 'Hada',
 };
 
+// Rangos de IDs oficiales por generación (solo válido para IDs 1–1025).
+const GENERACIONES = [
+    { n: 1, nombre: '1 · Kanto',   rango: [1, 151] },
+    { n: 2, nombre: '2 · Johto',   rango: [152, 251] },
+    { n: 3, nombre: '3 · Hoenn',   rango: [252, 386] },
+    { n: 4, nombre: '4 · Sinnoh',  rango: [387, 493] },
+    { n: 5, nombre: '5 · Unova',   rango: [494, 649] },
+    { n: 6, nombre: '6 · Kalos',   rango: [650, 721] },
+    { n: 7, nombre: '7 · Alola',   rango: [722, 809] },
+    { n: 8, nombre: '8 · Galar',   rango: [810, 905] },
+    { n: 9, nombre: '9 · Paldea',  rango: [906, 1025] },
+];
+
+const ORDENES = {
+    'num': 'Número ↑',
+    'num-desc': 'Número ↓',
+    'az': 'A–Z',
+};
+
 const input = document.getElementById('pokemonInput');
 const buscarBtn = document.getElementById('buscarBtn');
 const resultadoDiv = document.getElementById('resultado');
 const paginacionDiv = document.getElementById('paginacion');
 const chipsTiposDiv = document.getElementById('chipsTipos');
+const chipsGenDiv = document.getElementById('chipsGen');
+const chipsOrdenDiv = document.getElementById('chipsOrden');
 const soloOficialesInput = document.getElementById('soloOficiales');
-const btnFiltros = document.getElementById('btnFiltros');
-const panelFiltros = document.getElementById('panelFiltros');
-const filtrosResumen = document.getElementById('filtrosResumen');
+const facetaTipo = document.getElementById('facetaTipo');
+const facetaGen = document.getElementById('facetaGen');
+const facetaOrden = document.getElementById('facetaOrden');
+const facetaFav = document.getElementById('facetaFav');
 
 const estado = {
     cargado: false,
@@ -46,6 +68,8 @@ const estado = {
         q: '',              // texto de búsqueda
         pagina: 0,
         tipos: [],          // tipos seleccionados (se unen con OR)
+        generaciones: [],   // generaciones seleccionadas (OR; solo IDs oficiales)
+        orden: 'num',       // 'num' | 'num-desc' | 'az'
         soloFavoritos: false,
         incluirFormas: false,
     },
@@ -86,6 +110,8 @@ function sincronizarHash() {
     if (estado.filtros.q) params.set('q', estado.filtros.q);
     if (estado.filtros.pagina > 0) params.set('pagina', estado.filtros.pagina + 1);
     if (estado.filtros.tipos.length) params.set('tipos', estado.filtros.tipos.join(','));
+    if (estado.filtros.generaciones.length) params.set('gen', estado.filtros.generaciones.join(','));
+    if (estado.filtros.orden !== 'num') params.set('orden', estado.filtros.orden);
     if (estado.filtros.soloFavoritos) params.set('fav', '1');
     if (estado.filtros.incluirFormas) params.set('formas', '1');
 
@@ -101,10 +127,17 @@ function sincronizarHash() {
 function estadoDesdeHash() {
     const params = new URLSearchParams(location.hash.replace(/^#/, ''));
     const tipos = (params.get('tipos') ?? '').split(',').filter((t) => t in COLORES_TIPO);
+    const generaciones = (params.get('gen') ?? '')
+        .split(',')
+        .map(Number)
+        .filter((n) => GENERACIONES.some((g) => g.n === n));
+    const orden = params.get('orden');
     return {
         q: params.get('q') ?? '',
         pagina: Math.max(0, (Number(params.get('pagina')) || 1) - 1),
         tipos,
+        generaciones,
+        orden: orden in ORDENES ? orden : 'num',
         soloFavoritos: params.get('fav') === '1',
         incluirFormas: params.get('formas') === '1',
     };
@@ -212,6 +245,34 @@ function alternarFavoritos() {
     actualizar();
 }
 
+function alternarGeneracion(n) {
+    const activas = estado.filtros.generaciones;
+    activas.includes(n)
+        ? activas.splice(activas.indexOf(n), 1)
+        : activas.push(n);
+    estado.filtros.pagina = 0;
+    actualizar();
+}
+
+function alternarOrden(clave) {
+    estado.filtros.orden = clave;
+    estado.filtros.pagina = 0;
+    actualizar();
+}
+
+// Ordena copia para no reordenar la lista maestra.
+function ordenar(lista) {
+    const copia = [...lista];
+    switch (estado.filtros.orden) {
+        case 'az':
+            return copia.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+        case 'num-desc':
+            return copia.sort((a, b) => b.id - a.id);
+        default:
+            return copia.sort((a, b) => a.id - b.id);
+    }
+}
+
 // La lista de IDs de un tipo se pide la primera vez que se activa (y otra vez si falla).
 async function precargarTipo(tipo) {
     if (estado.tipoListas[tipo] instanceof Set || estado.tipoListas[tipo] === 'cargando') {
@@ -245,6 +306,13 @@ function listaVisible() {
     if (!estado.filtros.incluirFormas) {
         lista = lista.filter((p) => p.id <= ID_ULTIMO_OFICIAL);
     }
+    // Por generación: solo IDs oficiales (los de las formas no mapean de forma fiable a ninguna gen).
+    if (estado.filtros.generaciones.length) {
+        lista = lista.filter((p) => estado.filtros.generaciones.some((n) => {
+            const g = GENERACIONES.find((x) => x.n === n);
+            return g && p.id >= g.rango[0] && p.id <= g.rango[1];
+        }));
+    }
     if (estado.filtros.soloFavoritos) {
         lista = lista.filter((p) => estado.favoritos.has(p.id));
     }
@@ -263,7 +331,49 @@ function listaVisible() {
     return lista;
 }
 
-function renderChips() {
+// ---------- Barra de facetas: Tipo | Generación | Ordenar | Favoritos ----------
+
+const PANELES = [
+    { boton: facetaTipo, panel: 'panelTipo' },
+    { boton: facetaGen, panel: 'panelGen' },
+    { boton: facetaOrden, panel: 'panelOrden' },
+];
+
+function abrirPanel(panelId) {
+    PANELES.forEach(({ boton, panel }) => {
+        const abierto = panel === panelId;
+        document.getElementById(panel).classList.toggle('oculto', !abierto);
+        boton.setAttribute('aria-expanded', String(abierto));
+    });
+}
+
+function alternarPanel(panelId) {
+    const estabaAbierto = !document.getElementById(panelId).classList.contains('oculto');
+    if (estabaAbierto) {
+        abrirPanel(null); // cierra todos
+    } else {
+        abrirPanel(panelId); // abre solo este
+    }
+}
+
+facetaTipo.addEventListener('click', () => alternarPanel('panelTipo'));
+facetaGen.addEventListener('click', () => alternarPanel('panelGen'));
+facetaOrden.addEventListener('click', () => alternarPanel('panelOrden'));
+facetaFav.addEventListener('click', alternarFavoritos);
+
+// Etiquetas y resaltados de la barra: cuenta activos en cada faceta.
+function actualizarBarra() {
+    const nTipos = estado.filtros.tipos.length;
+    const nGens = estado.filtros.generaciones.length;
+    facetaTipo.innerHTML = `Tipo${nTipos ? ` (${nTipos})` : ''} <span class="flecha" aria-hidden="true">▾</span>`;
+    facetaGen.innerHTML = `Generación${nGens ? ` (${nGens})` : ''} <span class="flecha" aria-hidden="true">▾</span>`;
+    facetaOrden.innerHTML = `${ORDENES[estado.filtros.orden]} <span class="flecha" aria-hidden="true">▾</span>`;
+    facetaFav.setAttribute('aria-pressed', String(estado.filtros.soloFavoritos));
+    facetaTipo.classList.toggle('chip--on', nTipos > 0);
+    facetaGen.classList.toggle('chip--on', nGens > 0);
+}
+
+function renderChipsTipos() {
     chipsTiposDiv.innerHTML = `
         ${Object.keys(COLORES_TIPO).map((tipo) => `
             <button type="button" class="chip" data-tipo="${tipo}"
@@ -272,34 +382,40 @@ function renderChips() {
                 ${NOMBRES_TIPO[tipo]}
             </button>
         `).join('')}
-        <button type="button" class="chip chip--favoritos"
-                aria-pressed="${String(estado.filtros.soloFavoritos)}">
-            ★ Favoritos
-        </button>
     `;
 
-    chipsTiposDiv.querySelectorAll('.chip[data-tipo]').forEach((chip) => {
+    chipsTiposDiv.querySelectorAll('.chip').forEach((chip) => {
         chip.addEventListener('click', () => alternarTipo(chip.dataset.tipo));
     });
-    chipsTiposDiv.querySelector('.chip--favoritos').addEventListener('click', alternarFavoritos);
-
-    actualizarResumenFiltros();
 }
 
-// Resumen en el botón del desplegable: cuántos filtros hay activos.
-function actualizarResumenFiltros() {
-    const n = estado.filtros.tipos.length
-        + (estado.filtros.soloFavoritos ? 1 : 0)
-        + (estado.filtros.incluirFormas ? 1 : 0);
-    filtrosResumen.textContent = n ? `(${n})` : '';
-    btnFiltros.classList.toggle('chip--on', n > 0);
+function renderGeneraciones() {
+    chipsGenDiv.innerHTML = GENERACIONES.map((g) => `
+        <button type="button" class="chip" data-gen="${g.n}"
+                aria-pressed="${String(estado.filtros.generaciones.includes(g.n))}"
+                style="--tipo: var(--primary-color)">
+            ${g.nombre}
+        </button>
+    `).join('');
+
+    chipsGenDiv.querySelectorAll('.chip').forEach((chip) => {
+        chip.addEventListener('click', () => alternarGeneracion(Number(chip.dataset.gen)));
+    });
 }
 
-// Abrir y cerrar el panel de filtros.
-btnFiltros.addEventListener('click', () => {
-    const oculto = panelFiltros.classList.toggle('oculto');
-    btnFiltros.setAttribute('aria-expanded', String(!oculto));
-});
+function renderOrdenes() {
+    chipsOrdenDiv.innerHTML = Object.keys(ORDENES).map((clave) => `
+        <button type="button" class="chip" data-orden="${clave}"
+                aria-pressed="${String(estado.filtros.orden === clave)}"
+                style="--tipo: var(--primary-color)">
+            ${ORDENES[clave]}
+        </button>
+    `).join('');
+
+    chipsOrdenDiv.querySelectorAll('.chip').forEach((chip) => {
+        chip.addEventListener('click', () => alternarOrden(chip.dataset.orden));
+    });
+}
 
 function actualizar() {
     sincronizarHash();
@@ -309,14 +425,17 @@ function actualizar() {
 function reflejarControles() {
     input.value = estado.filtros.q;
     soloOficialesInput.checked = !estado.filtros.incluirFormas;
-    renderChips();
+    renderChipsTipos();
+    renderGeneraciones();
+    renderOrdenes();
+    actualizarBarra();
 }
 
 function renderRejilla() {
     if (!estado.cargado) {
         return;
     }
-    renderChips();
+    reflejarControles();
 
     // Al tratar los chips de tipo se piden sus listas; hasta que estén, no se filtra a medias.
     estado.filtros.tipos.forEach(precargarTipo);
@@ -325,7 +444,7 @@ function renderRejilla() {
         return;
     }
 
-    const lista = listaVisible();
+    const lista = ordenar(listaVisible());
     const total = lista.length;
 
     if (total === 0) {
