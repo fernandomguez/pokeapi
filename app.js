@@ -9,6 +9,9 @@
 // El estado (búsqueda, página, tipos, favoritos, incluir formas) vive en el hash de la URL,
 // así que una búsqueda resultada se puede compartir y atrás/adelante del navegador funcionan.
 
+const APP_VERSION = '5 · barra de facetas + quitar filtros (2026-11-05)';
+console.info(`Pokédex · app.js v${APP_VERSION} · commit 0f38589`);
+
 const API_URL = 'https://pokeapi.co/api/v2/pokemon';
 const SPRITES_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
 const POR_PAGINA = 24;
