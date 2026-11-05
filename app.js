@@ -729,6 +729,20 @@ async function abrirFicha(id) {
             corazon.classList.toggle('corazon--activo', ahoraActivo);
             corazon.setAttribute('aria-pressed', String(ahoraActivo));
             corazon.setAttribute('aria-label', `${ahoraActivo ? 'Quitar' : 'Guardar'} en favoritos`);
+
+            // La tarjeta del grid comparte estado: sincronizamos su corazón
+            // para que al salir de la ficha lo vea marcado o desmarcado.
+            const corazonTarjeta = document.querySelector(`.p-card[data-id="${id}"] .corazon`);
+            if (corazonTarjeta) {
+                corazonTarjeta.classList.toggle('corazon--activo', ahoraActivo);
+                corazonTarjeta.setAttribute('aria-pressed', String(ahoraActivo));
+                corazonTarjeta.setAttribute('aria-label', `${ahoraActivo ? 'Quitar' : 'Guardar'} en favoritos`);
+            }
+            // Con el filtro de favoritos activo, la tarjeta debe aparecer
+            // o desaparecer del grid según el nuevo estado.
+            if (estado.filtros.soloFavoritos) {
+                renderRejilla();
+            }
         });
     } catch (error) {
         modal.querySelector('.modal__card').innerHTML = `
