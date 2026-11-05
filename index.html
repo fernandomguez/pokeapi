@@ -10,6 +10,7 @@
             --background-color: #f4f6f9;
             --card-background: #ffffff;
             --text-color: #333333;
+            --text-soft: #555555;
             --border-color: #ddd;
         }
 
@@ -17,34 +18,27 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
             margin: 0;
+            min-height: 100vh;
         }
 
         .container {
-            background-color: var(--card-background);
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2.5rem 1rem;
         }
 
         h1 {
-            margin-bottom: 1.5rem;
+            margin: 0 0 1.5rem;
             color: var(--primary-color);
+            text-align: center;
             font-size: 1.8rem;
         }
 
         .search-box {
             display: flex;
             gap: 0.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
 
         input[type="text"] {
@@ -73,46 +67,175 @@
             transition: background-color 0.2s;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             background-color: #d32f2f;
         }
 
-        #resultado {
-            margin-top: 1.5rem;
-            text-align: left;
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
-        /* Estilos para la tarjeta del Pokémon cuando aparece */
-        .pokemon-card {
-            background: #fafafa;
+        /* ---- Chips de filtro (tipos y favoritos) ---- */
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .chip {
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 0.35rem 0.8rem;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-color);
+            transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+        }
+
+        .chip[aria-pressed="true"] {
+            background: var(--tipo, var(--primary-color));
+            border-color: transparent;
+            color: #fff;
+        }
+
+        .chip--favoritos[aria-pressed="true"] {
+            background: #e91e63;
+        }
+
+        .formas {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-soft);
+        }
+
+        /* ---- Rejilla ---- */
+
+        .p-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .p-card {
+            position: relative;
+            background: var(--card-background);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 1.5rem;
+            padding: 1rem 0.5rem;
             text-align: center;
+            color: inherit;
+            font: inherit;
+            font-weight: bold;
+            cursor: pointer;
             animation: fadeIn 0.3s ease-in-out;
         }
 
-        .pokemon-card img {
-            width: 150px;
-            height: 150px;
+        .p-card:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .p-card:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        .p-card img {
+            width: 96px;
+            height: 96px;
             object-fit: contain;
-            background: #fff;
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 1rem;
+            min-height: 96px;
         }
 
-        .pokemon-card h2 {
-            margin: 0 0 0.5rem 0;
-            color: #222;
+        .p-card .nombre {
+            display: block;
+            margin-top: 0.5rem;
+            text-transform: capitalize;
         }
 
-        .pokemon-info {
+        .p-card .num {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: normal;
+            color: #999;
+        }
+
+        .p-card .badges {
             display: flex;
-            justify-content: space-around;
-            margin-top: 1rem;
-            font-size: 0.95rem;
-            color: #555;
+            justify-content: center;
+            gap: 0.3rem;
+            margin-top: 0.4rem;
+            min-height: 1em;
+        }
+
+        .badge-tipo {
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.1rem 0.55rem;
+            border-radius: 999px;
+        }
+
+        /* ---- Corazón de favoritos ---- */
+
+        .corazon {
+            position: absolute;
+            top: 0.35rem;
+            right: 0.35rem;
+            background: none;
+            border: none;
+            padding: 0.15rem 0.3rem;
+            font-size: 1.15rem;
+            line-height: 1;
+            color: #ccc;
+        }
+
+        .corazon--activo {
+            color: #e91e63;
+        }
+
+        .corazon--modal {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+        }
+
+        /* ---- Paginación ---- */
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0 0;
+        }
+
+        .pagination .info {
+            font-size: 0.9rem;
+            color: var(--text-soft);
+            padding: 0 0.5rem;
+        }
+
+        .pagination button {
+            padding: 0.6rem 1rem;
+        }
+
+        /* ---- Estados ---- */
+
+        .error-message,
+        .empty-message {
+            text-align: center;
         }
 
         .error-message {
@@ -123,9 +246,85 @@
             font-weight: 500;
         }
 
+        .empty-message {
+            color: var(--text-soft);
+            padding: 2rem 1rem;
+        }
+
+        /* ---- Modal de detalle ---- */
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            animation: fadeIn 0.2s ease-in-out;
+            z-index: 10;
+        }
+
+        .modal__card {
+            position: relative;
+            background: var(--card-background);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal__cerrar {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .modal__card img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+        }
+
+        .tipos {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .tipo {
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+        }
+
+        .pokemon-info {
+            display: flex;
+            justify-content: space-around;
+            font-size: 0.95rem;
+            color: var(--text-soft);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; transition: none !important; }
         }
     </style>
 </head>
@@ -134,11 +333,18 @@
     <div class="container">
         <h1>Pokédex</h1>
         <div class="search-box">
-            <input type="text" id="pokemonInput" placeholder="Ej: Pikachu, Ditto...">
+            <input type="text" id="pokemonInput" placeholder="Buscar por nombre o número: Pikachu, 25..." autocomplete="off">
             <button id="buscarBtn">Buscar</button>
         </div>
 
+        <nav id="chipsTipos" class="chips" aria-label="Filtrar por tipo o favoritos"></nav>
+        <label class="formas">
+            <input type="checkbox" id="soloOficiales" checked>
+            Solo la Pokédex oficial (1–1025)
+        </label>
+
         <div id="resultado"></div>
+        <nav id="paginacion" class="pagination" aria-label="Páginas de Pokémon"></nav>
     </div>
 
     <script src="app.js"></script>
