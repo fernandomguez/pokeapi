@@ -78,6 +78,43 @@
 
         /* ---- Chips de filtro (tipos y favoritos) ---- */
 
+        .filtros {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chip--toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .chip--toggle .flecha {
+            font-size: 0.65rem;
+            transition: transform 0.2s;
+        }
+
+        #btnFiltros[aria-expanded="true"] .flecha {
+            transform: rotate(180deg);
+        }
+
+        #btnFiltros[aria-expanded="true"],
+        #btnFiltros.chip--on {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .panel {
+            text-align: center;
+        }
+
+        .oculto {
+            display: none;
+        }
+
         .chips {
             display: flex;
             flex-wrap: wrap;
@@ -110,7 +147,7 @@
         .formas {
             display: flex;
             justify-content: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.25rem;
             font-size: 0.9rem;
             color: var(--text-soft);
         }
@@ -205,9 +242,18 @@
         }
 
         .corazon--modal {
-            position: absolute;
-            top: 0.5rem;
-            left: 0.5rem;
+            position: static;
+        }
+
+        .modal__titulo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .modal__titulo h2 {
+            margin: 0;
         }
 
         /* ---- Paginación ---- */
@@ -337,11 +383,19 @@
             <button id="buscarBtn">Buscar</button>
         </div>
 
-        <nav id="chipsTipos" class="chips" aria-label="Filtrar por tipo o favoritos"></nav>
-        <label class="formas">
-            <input type="checkbox" id="soloOficiales" checked>
-            Solo la Pokédex oficial (1–1025)
-        </label>
+        <div class="filtros">
+            <button type="button" id="btnFiltros" class="chip chip--toggle"
+                    aria-expanded="false" aria-controls="panelFiltros">
+                Filtros <span id="filtrosResumen"></span><span class="flecha" aria-hidden="true">▾</span>
+            </button>
+            <div id="panelFiltros" class="panel oculto">
+                <nav id="chipsTipos" class="chips" aria-label="Filtrar por tipo o favoritos"></nav>
+                <label class="formas">
+                    <input type="checkbox" id="soloOficiales" checked>
+                    Solo la Pokédex oficial (1–1025)
+                </label>
+            </div>
+        </div>
 
         <div id="resultado"></div>
         <nav id="paginacion" class="pagination" aria-label="Páginas de Pokémon"></nav>

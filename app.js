@@ -36,6 +36,9 @@ const resultadoDiv = document.getElementById('resultado');
 const paginacionDiv = document.getElementById('paginacion');
 const chipsTiposDiv = document.getElementById('chipsTipos');
 const soloOficialesInput = document.getElementById('soloOficiales');
+const btnFiltros = document.getElementById('btnFiltros');
+const panelFiltros = document.getElementById('panelFiltros');
+const filtrosResumen = document.getElementById('filtrosResumen');
 
 const estado = {
     cargado: false,
@@ -279,7 +282,24 @@ function renderChips() {
         chip.addEventListener('click', () => alternarTipo(chip.dataset.tipo));
     });
     chipsTiposDiv.querySelector('.chip--favoritos').addEventListener('click', alternarFavoritos);
+
+    actualizarResumenFiltros();
 }
+
+// Resumen en el botón del desplegable: cuántos filtros hay activos.
+function actualizarResumenFiltros() {
+    const n = estado.filtros.tipos.length
+        + (estado.filtros.soloFavoritos ? 1 : 0)
+        + (estado.filtros.incluirFormas ? 1 : 0);
+    filtrosResumen.textContent = n ? `(${n})` : '';
+    btnFiltros.classList.toggle('chip--on', n > 0);
+}
+
+// Abrir y cerrar el panel de filtros.
+btnFiltros.addEventListener('click', () => {
+    const oculto = panelFiltros.classList.toggle('oculto');
+    btnFiltros.setAttribute('aria-expanded', String(!oculto));
+});
 
 function actualizar() {
     sincronizarHash();
@@ -309,9 +329,14 @@ function renderRejilla() {
     const total = lista.length;
 
     if (total === 0) {
-        const motivo = estado.filtros.soloFavoritos && !estado.favoritos.size
-            ? 'Todavía no tienes favoritos: pulsa el corazón de cualquier tarjeta para guardarla.'
-            : `No se ha encontrado ningún Pokémon para «${estado.filtros.q.trim()}».`;
+        let motivo;
+        if (estado.filtros.soloFavoritos && !estado.favoritos.size) {
+            motivo = 'Todavía no tienes favoritos: pulsa el corazón de cualquier tarjeta para guardarla.';
+        } else if (estado.filtros.soloFavoritos) {
+            motivo = 'Ninguno de tus favoritos coincide con la búsqueda o los filtros activos.';
+        } else {
+            motivo = `No se ha encontrado ningún Pokémon para «${estado.filtros.q.trim()}».`;
+        }
         mostrarMensaje(motivo);
         return;
     }
@@ -474,11 +499,13 @@ async function abrirFicha(id) {
         const activo = estado.favoritos.has(id);
         modal.querySelector('.modal__card').innerHTML = `
             <button type="button" class="modal__cerrar" aria-label="Cerrar">✕</button>
-            <button type="button" class="corazon corazon--modal ${activo ? 'corazon--activo' : ''}"
-                    aria-pressed="${String(activo)}"
-                    aria-label="${activo ? 'Quitar' : 'Guardar'} en favoritos">♥</button>
             <img src="${imagen}" alt="${nombre}">
-            <h2>${nombre}</h2>
+            <div class="modal__titulo">
+                <h2>${nombre}</h2>
+                <button type="button" class="corazon corazon--modal ${activo ? 'corazon--activo' : ''}"
+                        aria-pressed="${String(activo)}"
+                        aria-label="${activo ? 'Quitar' : 'Guardar'} en favoritos">♥</button>
+            </div>
             <div class="tipos">
                 ${tipos.map((tipo) => `
                     <span class="tipo" style="background-color: ${COLORES_TIPO[tipo] ?? '#777'}">${NOMBRES_TIPO[tipo] ?? tipo}</span>
@@ -489,6 +516,9 @@ async function abrirFicha(id) {
                 <span><strong>Peso:</strong> ${peso} kg</span>
             </div>
         `;
+
+        // El innerHTML ha sustituido el botón de cerrar: devolvemos el foco a él.
+        modal.querySelector('.modal__cerrar').focus();
 
         const corazon = modal.querySelector('.corazon--modal');
         corazon.addEventListener('click', () => {
@@ -507,13 +537,22 @@ async function abrirFicha(id) {
 }
 
 function cerrarConModal(modal) {
-    const cerrar = () => modal.remove();
+    const cerrar = () => {
+        document.removeEventListener('keydown', conEscape);
+        modal.remove();
+    };
+    const conEscape = (event) => {
+        if (event.key === 'Escape') {
+            cerrar();
+        }
+    };
     modal.addEventListener('click', (event) => {
         if (event.target === modal || event.target.closest('.modal__cerrar')) {
             cerrar();
         }
     });
-    // El foco entra en el botón de cerrar: así Escape llega al modal y se cerrará.
+    // El listener vive en document: Escape cierra la ficha aunque el foco no esté dentro del modal.
+    document.addEventListener('keydown', conEscape);
     modal.querySelector('.modal__cerrar').focus();
 }
 
