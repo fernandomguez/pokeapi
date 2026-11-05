@@ -9,8 +9,8 @@
 // El estado (búsqueda, página, tipos, favoritos, incluir formas) vive en el hash de la URL,
 // así que una búsqueda resultada se puede compartir y atrás/adelante del navegador funcionan.
 
-const APP_VERSION = '5 · barra de facetas + quitar filtros (2026-11-05)';
-console.info(`Pokédex · app.js v${APP_VERSION} · commit 0f38589`);
+const APP_VERSION = '6 · reintento de carga y versión visible (2026-11-05)';
+console.info(`Pokédex · app.js con commit actual · ${APP_VERSION}`);
 
 const API_URL = 'https://pokeapi.co/api/v2/pokemon';
 const TIPOS_URL = 'https://pokeapi.co/api/v2/type'; // ¡endpoint aparte! /pokemon/{tipo} da 404
@@ -181,14 +181,25 @@ window.addEventListener('hashchange', () => {
 
 // ---------- Lista completa ----------
 
-async function cargarLista() {
-    if (estado.cargado) {
+// Pantalla informativa (y con botón de reintento) para los estados del comienzo.
+function pantalla(texto, conReintentar) {
+    paginacionDiv.innerHTML = '';
+    resultadoDiv.innerHTML = `
+        <p class="empty-message">${texto}</p>
+        ${conReintentar ? '<button type="button" id="btnReintentar">↺ Reintentar</button>' : ''}
+    `;
+    resultadoDiv.querySelector('#btnReintentar')?.addEventListener('click', () => cargarLista(true));
+}
+
+async function cargarLista(forzar = false) {
+    if (estado.cargado && !forzar) {
         return;
     }
+    estado.cargado = false;
 
     Object.assign(estado.filtros, estadoDesdeHash());
     reflejarControles();
-    mostrarMensaje('Cargando la lista de Pokémon…');
+    pantalla('Cargando la lista de Pokémon…');
 
     try {
         // La PokéAPI tiene ~1302 Pokémon (los 1025 oficiales + formas);
@@ -206,7 +217,7 @@ async function cargarLista() {
         estado.cargado = true;
         renderRejilla();
     } catch (error) {
-        mostrarError('No se ha podido cargar la lista de Pokémon. Comprueba tu conexión y recarga la página.');
+        pantalla('No se ha podido cargar la lista de Pokémon. Comprueba tu conexión y vuelve a intentarlo.', true);
     }
 }
 
