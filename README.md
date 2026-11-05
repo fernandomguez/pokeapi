@@ -2,14 +2,14 @@
 
 **Explora la Pokédex completa: filtra por tipo, marca favoritos, pagina y busca por nombre o número.**
 
-Práctica con la [PokéAPI](https://pokeapi.co): la pantalla muestra una rejilla con los Pokémon paginados (24 por página, con sprite, número y etiquetas de tipo), 18 chips para filtrar por tipo, un conmutador para quedarse solo con los 1025 oficiales, corazones de favoritos que persisten en `localStorage` y buscador en vivo por nombre parcial o número. Al pulsar una tarjeta se abre la ficha del Pokémon con su imagen oficial, tipos con su color, altura y peso. El estado completo vive en el *hash* de la URL (`#q=bulba&pagina=3&tipos=fuego`): una vista concreta se puede compartir y los botones atrás/adelante funcionan. Está hecho en dos versiones sobre la misma idea:
+Práctica con la [PokéAPI](https://pokeapi.co): la pantalla muestra una barra "**Filtrar por: Tipo | Generación | Ordenar | Favoritos**", cada faceta con su desplegable (los 18 tipos, las 9 generaciones por rangos de ID, y el orden por número o A–Z), un interruptor de favoritos que persiste en `localStorage`, la opción de quedarse solo con los 1025 oficiales y un buscador en vivo por nombre parcial o número. Debajo, una rejilla paginada de 24 tarjetas con sprite, número y etiquetas de tipo; al pulsar una tarjeta se abre la ficha del Pokémon con su imagen oficial, tipos con su color, altura y peso. El estado completo vive en el *hash* de la URL (`#q=bulba&gen=1,3&tipos=fuego&orden=az`): una vista concreta se puede compartir y los botones atrás/adelante funcionan. Está hecho en dos versiones sobre la misma idea:
 
 - **Web** — Pokédex con rejilla, paginado, filtros por tipo, favoritos, búsqueda en vivo y ficha individual.
 - **Python (CLI)** — consulta de fichas individuales desde la terminal, para practicar peticiones HTTP sin framework.
 
 ## Cómo funciona
 
-La web carga la lista de Pokémon en una única petición (`GET /api/v2/pokemon?limit=2000`, unos 1300 registros) y a partir de ahí la rejilla, el paginado y la búsqueda son locales, sin peticiones extra. Las listas de cada tipo (para los chips de filtro) y los tipos de cada tarjeta (para las etiquetas) se piden bajo demanda la primera vez y quedan en memoria. Los sprites salen del repositorio oficial de sprites de PokéAPI, con `loading="lazy"` y una reserva por si alguna forma alternativa no tiene sprite.
+La web carga la lista de Pokémon en una única petición (`GET /api/v2/pokemon?limit=2000`, unos 1300 registros) y a partir de ahí la rejilla, el paginado, la búsqueda y el filtro de generación son locales, sin peticiones extra. Las listas de cada tipo (para la faceta Tipo) y los tipos de cada tarjeta (para las etiquetas) se piden bajo demanda la primera vez y quedan en memoria. Los sprites salen del repositorio oficial de sprites de PokéAPI, con `loading="lazy"` y una reserva por si alguna forma alternativa no tiene sprite.
 
 La ficha individual (al pulsar una tarjeta) hace su propia petición a `GET /api/v2/pokemon/{id}` y saca del JSON los campos que interesan:
 
