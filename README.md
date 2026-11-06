@@ -2,7 +2,7 @@
 
 **Explora la Pokédex completa: filtra por tipo, marca favoritos, pagina y busca por nombre o número.**
 
-Práctica con la [PokéAPI](https://pokeapi.co): la pantalla muestra una barra "**Filtrar por: Tipo | Generación | Ordenar | Favoritos**", cada faceta con su desplegable (los 18 tipos, las 9 generaciones por rangos de ID, y el orden por número o A–Z), un interruptor de favoritos que persiste en `localStorage`, la opción de quedarse solo con los 1025 oficiales y un buscador en vivo por nombre parcial o número. Debajo, una rejilla paginada de 24 tarjetas con sprite, número y etiquetas de tipo; al pulsar una tarjeta se abre la ficha del Pokémon con su imagen oficial, tipos con su color, altura y peso. El estado completo vive en el *hash* de la URL (`#q=bulba&gen=1,3&tipos=fuego&orden=az`): una vista concreta se puede compartir y los botones atrás/adelante funcionan. Está hecho en dos versiones sobre la misma idea:
+Práctica con la [PokéAPI](https://pokeapi.co): la pantalla muestra una barra "**Filtrar por: Tipo | Generación | Ordenar | Favoritos**", cada faceta con su desplegable (los 18 tipos, las 9 generaciones por rangos de ID, y el orden por número o A–Z), un interruptor de favoritos que persiste en `localStorage`, un buscador en vivo por nombre parcial o número. Debajo, una rejilla paginada de 24 tarjetas con sprite, número y etiquetas de tipo; al pulsar una tarjeta se abre la ficha del Pokémon con su imagen oficial, tipos con su color, altura y peso. Está hecho en dos versiones sobre la misma idea:
 
 - **Web** — Pokédex con rejilla, paginado, filtros por tipo, favoritos, búsqueda en vivo y ficha individual.
 - **Python (CLI)** — consulta de fichas individuales desde la terminal, para practicar peticiones HTTP sin framework.
@@ -23,7 +23,7 @@ Los errores (sin conexión, sin sprite, Pokémon sin ficha) se capturan y se mue
 
 ## La versión web
 
-HTML, CSS y JavaScript planos, sin dependencias ni build: se abre `index.html` y funciona. La lógica está en `app.js`, con `fetch` y `async/await`; el estado se centraliza en un objeto `estado.filtros` del que se deriva la vista, el filtrado va con un pequeño *debounce* (200 ms) y los favoritos se guardan en `localStorage` (`pokedex-favoritos`). Respeta `prefers-reduced-motion`.
+HTML, CSS y JavaScript planos, sin dependencias ni build: se abre `index.html` y funciona. La lógica está repartida en varios archivos de `js/` (ver Estructura), con `fetch` y `async/await`; el estado se centraliza en un objeto `estado` del que se dibuja la vista y los favoritos se guardan en `localStorage` (`pokedex-favoritos`). Respeta `prefers-reduced-motion`.
 
 ## La versión Python
 
@@ -38,8 +38,15 @@ Pide un nombre por teclado y muestra la ficha y el enlace al artwork oficial. Us
 
 | Ruta | Contenido |
 | --- | --- |
-| [`index.html`](index.html) | Pokédex web: estilos, rejilla, paginación y modal de ficha |
-| [`app.js`](app.js) | Lógica de la web: lista, búsqueda, paginado y ficha |
+| [`index.html`](index.html) | Estructura de la página |
+| [`css/style.css`](css/style.css) | Estilos |
+| [`js/datos.js`](js/datos.js) | Constantes: URLs, colores y nombres de tipos, generaciones |
+| [`js/favoritos.js`](js/favoritos.js) | Favoritos en `localStorage` |
+| [`js/api.js`](js/api.js) | Peticiones a la PokéAPI |
+| [`js/filtros.js`](js/filtros.js) | Estado, filtrado y orden |
+| [`js/ui.js`](js/ui.js) | Dibujo de la rejilla, chips y paginación |
+| [`js/ficha.js`](js/ficha.js) | Ventana con la ficha del Pokémon |
+| [`js/main.js`](js/main.js) | Carga inicial y eventos |
 | [`api_python.py`](api_python.py) | Versión de consola en Python |
 
 ## Datos
